@@ -6,11 +6,62 @@ const form_errors_div = document.getElementById("form-errors");
 const current_weekly_mileage_input = document.getElementById("current_weekly_mileage");
 const unit_of_measurement_input = document.getElementById("units-of-measurement");
 const race_distance_input = document.getElementById("race_distance");
-const runs_per_week_input = document.getElementById("runs-per-week");
+const long_run_day_input = document.getElementById("long-run-day");
+const training_days_inputs = [...document.querySelectorAll("input.runs-days")];
+const calendar_wrapper = document.getElementById("calendar-wrapper");
 
 submit_btn.addEventListener('click', function(e){
 	e.preventDefault();
+	validateAndGenerate();
+});
+
+function makeCalendar(plan, start_date, end_date, training_days, lr_day, units, race_date){
+	var days = {};
+	var curr_date = new Date(start_date.getFullYear(), start_date.getMonth(), start_date.getDate());
+	curr_date.setDate(curr_date.getDate() - (curr_date.getDay()+1))
 	
+	for(let week=0; week<plan.length; week++){
+		var weekly_plan = plan[week];
+		var weekly_distance = weekly_plan.reduce((a,b)=>a+b,0);
+		var long_run = weekly_plan.reduce((acc, curr)=>Math.max(acc, curr), 0);
+		weekly_plan.splice(weekly_plan.indexOf(long_run), 1);
+		
+		for(let day=0; day<7; day++){
+			curr_date.setDate(curr_date.getDate() + 1);
+			if(curr_date < start_date) continue;
+			var month_year = `${curr_date.getMonth()+1}/${curr_date.getFullYear()}`;
+			if(!days[month_year]) days[month_year] = [];
+			var date = curr_date.getDate();
+			var distance = 0;
+			
+			var is_long_run = day == lr_day;
+			if(is_long_run) distance = long_run
+			else if(training_days.includes(day) && weekly_plan.length) distance = weekly_plan.shift();
+			if(distance !== 0) days[month_year].push({date, distance, week, is_long_run, weekly_distance});
+		}
+	}
+	
+	var events = [];
+	Object.keys(days).forEach(key=>{
+		var [month, year] = key.split("/").map(e=>+e);
+		days[key].forEach(day=>{
+			var date = new Date(year, month-1, day.date);
+			var desc = day.is_long_run ? `Long Run: ${day.distance}${units == 'm' ? 'm' : 'km'}` : `Run ${day.distance}${units == 'm' ? 'm' : 'km'}`;
+			events.push({date, desc});
+		});
+	});
+	
+	events.push({date:end_date, desc: 'Race Day!'});
+	
+	calendar_wrapper.innerHTML = '<div id="calendar"></div>';
+	new calendar(document.getElementById('calendar'), {events});
+	
+	// todo: implement ical download, csv too, maybe
+	// https://github.com/nwcell/ics.js
+	
+}
+
+function validateAndGenerate(){
 	var errors = [];
 	var start_date, 
 		end_date, 
@@ -18,7 +69,10 @@ submit_btn.addEventListener('click', function(e){
 		current_weekly_mileage,
 		units,
 		race_distance,
-		weekly_runs;
+		long_run_day,
+		training_days;
+	
+	calendar_wrapper.innerHTML = '';
 	
 	// Validate Inputs
 	if(!start_date_input.value){
@@ -68,11 +122,27 @@ submit_btn.addEventListener('click', function(e){
 	units = unit_of_measurement_input.value == 'k' ? 'k' : 'm';
 	
 	race_distance = parseInt(race_distance_input.value);
-	weekly_runs = parseInt(runs_per_week_input.value);
+	
+	long_run_day = parseInt(long_run_day_input.value);
+	
+	training_days = training_days_inputs.filter(input=>input.checked).map(input=>parseInt(input.value));
+	
+	if(training_days.length !== 4 && training_days.length !== 5){
+		errors.push({
+			msg: `You must select either 4 or 5 training days. You selected ${training_days.length}.`,
+		});
+	}
+	
+	if(!training_days.includes(long_run_day)){
+		errors.push({
+			msg: `Your long run day must be one of your selected training days.`,
+			ele: long_run_day_input
+		});
+	}
 	
 	if(errors.length){
 		form_errors_div.innerHTML = errors.map(e=>{
-			e.ele.classList.add('is-invalid');
+			if(e.ele) e.ele.classList.add('is-invalid');
 			return `<div class="alert alert-danger alert-dismissible fade show" role="alert">
 				<i class="fa-solid fa-triangle-exclamation"></i> ${e.msg}
 				<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -84,7 +154,7 @@ submit_btn.addEventListener('click', function(e){
 		document.querySelectorAll(".is-invalid").forEach(ele=>ele.classList.remove("is-invalid"));
 	}
 	
-	var plan = generatePlan(total_weeks, race_distance, current_weekly_mileage, weekly_runs, units);
+	var plan = generatePlan(total_weeks, race_distance, current_weekly_mileage, training_days.length, units);
 	if(plan.errors.length){
 		form_errors_div.innerHTML = errors.map(e=>{
 			e.ele.classList.add('is-invalid');
@@ -100,9 +170,8 @@ submit_btn.addEventListener('click', function(e){
 	
 	if(!plan.plan.length) return;
 	
-	console.log(plan.plan);
-});
-
+	makeCalendar(plan.plan, start_date, end_date, training_days, long_run_day, units);
+}
 
 function generatePlan(weeks, raceDistance, startingWeeklyMilage, daysPerWeek, units = 'm') {
 
