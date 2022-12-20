@@ -46,7 +46,7 @@ function makeCalendar(plan, start_date, end_date, training_days, lr_day, units, 
 		var [month, year] = key.split("/").map(e=>+e);
 		days[key].forEach(day=>{
 			var date = new Date(year, month-1, day.date);
-			var desc = day.is_long_run ? `Long Run: ${day.distance}${units == 'm' ? 'm' : 'km'}` : `Run ${day.distance}${units == 'm' ? 'm' : 'km'}`;
+			var desc = day.is_long_run ? `${day.distance}${units == 'm' ? 'm' : 'k'}` : `${day.distance}${units == 'm' ? 'm' : 'k'}`;
 			events.push({date, desc});
 		});
 	});
