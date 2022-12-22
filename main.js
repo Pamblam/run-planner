@@ -77,7 +77,7 @@ function makeCalendar(plan, start_date, end_date, training_days, lr_day, units, 
 	calendar_wrapper.innerHTML = '<div id="calendar"></div>';
 	new calendar(document.getElementById('calendar'), {events});
 	
-	dl_cal_btn.removeAttribute("disabled");
+	dl_cal_btn.style.display = null;
 }
 
 function validateAndGenerate(){
@@ -92,7 +92,7 @@ function validateAndGenerate(){
 		training_days;
 	
 	ics_object = null
-	dl_cal_btn.setAttribute("disabled", 'disabled');
+	dl_cal_btn.style.display = "none";
 	
 	calendar_wrapper.innerHTML = '';
 	
