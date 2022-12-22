@@ -51,21 +51,21 @@ class ICS{
 	
 	getUTCDateStart(date){
 		var year = `${date.getFullYear()}`.padStart(4,'0');
-		var month = `${date.getMonth()}`.padStart(2,'0');
+		var month = `${date.getMonth()+1}`.padStart(2,'0');
 		var day = `${date.getDate()}`.padStart(2,'0');
 		return `${year}${month}${day}`;
 	}
 	
 	getUTCDateEnd(date){
 		var year = `${date.getFullYear()}`.padStart(4,'0');
-		var month = `${date.getMonth()}`.padStart(2,'0');
+		var month = `${date.getMonth()+1}`.padStart(2,'0');
 		var day = `${date.getDate()+1}`.padStart(2,'0');
 		return `${year}${month}${day}`;
 	}
 	
 	getUTCDateTimeStr(date){
 		var year = `${date.getUTCFullYear()}`.padStart(4,'0');
-		var month = `${date.getUTCMonth()}`.padStart(2,'0');
+		var month = `${date.getUTCMonth()+1}`.padStart(2,'0');
 		var day = `${date.getUTCDate()}`.padStart(2,'0');
 		var hour = `${date.getUTCHours()}`.padStart(2,'0');
 		var min = `${date.getUTCMinutes()}`.padStart(2,'0');
