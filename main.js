@@ -9,6 +9,22 @@ const race_distance_input = document.getElementById("race_distance");
 const long_run_day_input = document.getElementById("long-run-day");
 const training_days_inputs = [...document.querySelectorAll("input.runs-days")];
 const calendar_wrapper = document.getElementById("calendar-wrapper");
+const dl_cal_btn = document.getElementById('dl_cal_btn');
+
+var ics_object = null;
+
+dl_cal_btn.addEventListener('click', function(e){
+	e.preventDefault();
+	if(!ics_object) return;
+	var calendar = ics_object.build();
+	var element = document.createElement('a');
+	element.setAttribute('href', 'data:text/calendar;charset=utf-8,' + encodeURIComponent(calendar));
+	element.setAttribute('download', 'training_plan.ics');
+	element.style.display = 'none';
+	document.body.appendChild(element);
+	element.click();
+	document.body.removeChild(element);
+});
 
 submit_btn.addEventListener('click', function(e){
 	e.preventDefault();
@@ -42,23 +58,26 @@ function makeCalendar(plan, start_date, end_date, training_days, lr_day, units, 
 	}
 	
 	var events = [];
+	
+	ics_object = new ICS(`Race Training Calendar`);
+	
 	Object.keys(days).forEach(key=>{
 		var [month, year] = key.split("/").map(e=>+e);
 		days[key].forEach(day=>{
 			var date = new Date(year, month-1, day.date);
-			var desc = day.is_long_run ? `${day.distance}${units == 'm' ? 'm' : 'k'}` : `${day.distance}${units == 'm' ? 'm' : 'k'}`;
-			events.push({date, desc});
+			events.push({date, desc: `${day.distance}${units == 'm' ? 'm' : 'k'}`});
+			var desc = day.is_long_run ? `Long Run: ${day.distance}${units == 'm' ? 'm' : 'k'}` : `Run: ${day.distance}${units == 'm' ? 'm' : 'k'}`;
+			ics_object.addEvent(desc, ``, date);
 		});
 	});
 	
 	events.push({date:end_date, desc: 'Race Day!'});
+	ics_object.addEvent('Race Day!', ``, end_date);
 	
 	calendar_wrapper.innerHTML = '<div id="calendar"></div>';
 	new calendar(document.getElementById('calendar'), {events});
 	
-	// todo: implement ical download, csv too, maybe
-	// https://github.com/nwcell/ics.js
-	
+	dl_cal_btn.removeAttribute("disabled");
 }
 
 function validateAndGenerate(){
@@ -71,6 +90,9 @@ function validateAndGenerate(){
 		race_distance,
 		long_run_day,
 		training_days;
+	
+	ics_object = null
+	dl_cal_btn.setAttribute("disabled", 'disabled');
 	
 	calendar_wrapper.innerHTML = '';
 	
