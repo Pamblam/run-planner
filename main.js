@@ -65,9 +65,9 @@ function makeCalendar(plan, start_date, end_date, training_days, lr_day, units, 
 		var [month, year] = key.split("/").map(e=>+e);
 		days[key].forEach(day=>{
 			var date = new Date(year, month-1, day.date);
-			events.push({date, desc: `${day.distance}${units == 'm' ? 'm' : 'k'}`});
+			events.push({date, desc: `${day.distance}${units == 'm' ? 'm' : 'k'}`, note: `Week: ${day.week+1}\nWeekly Total: ${weekly_distance}`});
 			var desc = day.is_long_run ? `Long Run: ${day.distance}${units == 'm' ? 'm' : 'k'}` : `Run: ${day.distance}${units == 'm' ? 'm' : 'k'}`;
-			ics_object.addEvent(desc, ``, date);
+			ics_object.addEvent(desc, `Week: ${day.week+1}\nWeekly Total: ${weekly_distance}`, date);
 		});
 	});
 	
@@ -75,7 +75,9 @@ function makeCalendar(plan, start_date, end_date, training_days, lr_day, units, 
 	ics_object.addEvent('Race Day!', ``, end_date);
 	
 	calendar_wrapper.innerHTML = '<div id="calendar"></div>';
-	new calendar(document.getElementById('calendar'), {events});
+	new calendar(document.getElementById('calendar'), {events, onEventClick(event){
+		alert(event.note);
+	}});
 	
 	dl_cal_btn.style.display = null;
 }
