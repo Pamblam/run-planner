@@ -65,9 +65,9 @@ function makeCalendar(plan, start_date, end_date, training_days, lr_day, units, 
 		var [month, year] = key.split("/").map(e=>+e);
 		days[key].forEach(day=>{
 			var date = new Date(year, month-1, day.date);
-			events.push({date, desc: `${day.distance}${units == 'm' ? 'm' : 'k'}`, note: `Week: ${day.week+1}\nWeekly Total: ${weekly_distance}`});
+			events.push({date, desc: `${day.distance}${units == 'm' ? 'm' : 'k'}`, note: `Week: ${day.week+1}\nWeekly Total: ${day.weekly_distance}`});
 			var desc = day.is_long_run ? `Long Run: ${day.distance}${units == 'm' ? 'm' : 'k'}` : `Run: ${day.distance}${units == 'm' ? 'm' : 'k'}`;
-			ics_object.addEvent(desc, `Week: ${day.week+1}\nWeekly Total: ${weekly_distance}`, date);
+			ics_object.addEvent(desc, `Week: ${day.week+1}\nWeekly Total: ${day.weekly_distance}`, date);
 		});
 	});
 	
